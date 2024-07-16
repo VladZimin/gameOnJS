@@ -17,6 +17,10 @@ export class Game {
     2: {points: 0}
   }
 
+  constructor(eventEmitter) {
+    this.eventEmitter = eventEmitter
+  }
+
   #getRandomPosition(coordinates) {
     let newX
     let newY
@@ -42,6 +46,7 @@ export class Game {
       notCrossedPosition.push(this.#google.position)
     }
     this.#google = new Google(this.#getRandomPosition(notCrossedPosition))
+    this.eventEmitter.emit('changePosition')
   }
   #runGoogleJumpInterval () {
     this.#jumpGoogleIntervalId = setInterval(() => {
@@ -81,6 +86,8 @@ export class Game {
        if (this.#score[player.id].points === this.#settings.pointsToWin) {
          await this.finishGame()
        } else {
+         clearInterval(this.#jumpGoogleIntervalId)
+         this.#runGoogleJumpInterval()
          this.#moveGoogleToRandomPosition()
        }
      }
@@ -101,6 +108,7 @@ export class Game {
       movingPlayer.position.y += delta.y
     }
     this.#checkGoogleCatching(movingPlayer)
+    this.eventEmitter.emit('changePosition')
   }
   movePlayer1Right() {
     const delta = {x: 1}
@@ -179,6 +187,11 @@ export class Game {
 
     this.#google.position = new Position(0,0)
     this.#status = 'finished'
+    this.#score = {
+      '1': {points: 0},
+      '2': {points: 0},
+    }
+    this.eventEmitter.emit('changePosition')
   }
 }
 
